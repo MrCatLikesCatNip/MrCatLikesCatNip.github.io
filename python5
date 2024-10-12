@@ -1,0 +1,64 @@
+# npc.py
+from typing import Dict, List, Tuple
+import random
+
+class NPC:
+    def __init__(self, name: str, personality: Dict[str, int]):
+        self.name: str = name
+        self.personality: Dict[str, int] = personality
+        self.hunger: int = 100
+        self.thirst: int = 100
+        self.social_needs: int = 100
+        self.relationships: Dict[str, str] = {}
+        self.is_alive: bool = True
+        self.position: Tuple[int, int] = (random.randint(0, 800), random.randint(0, 600))
+        self.job: str = None
+        self.family: List[NPC] = []
+        self.desires: List[str] = []
+
+    def update_needs(self) -> None:
+        """Update NPC needs each game cycle."""
+        self.hunger -= random.randint(1, 5)
+        self.thirst -= random.randint(1, 5)
+        self.social_needs -= random.randint(1, 3)
+
+        if self.hunger <= 0 or self.thirst <= 0:
+            self.is_alive = False
+
+        if self.hunger < 50:
+            self.desires.append("Find Food")
+        if self.thirst < 50:
+            self.desires.append("Find Water")
+
+    def interact(self, other_npc: 'NPC') -> None:
+        """Define how NPC interacts with another NPC based on personality."""
+        interaction_outcome: str = random.choice(["friendship", "rivalry", "neutral"])
+        if interaction_outcome == "friendship":
+            self.relationships[other_npc.name] = "friend"
+        elif interaction_outcome == "rivalry":
+            self.relationships[other_npc.name] = "rival"
+        else:
+            self.relationships[other_npc.name] = "neutral"
+
+    def move(self) -> None:
+        """NPC moves randomly in the world."""
+        x, y = self.position
+        self.position = (x + random.randint(-5, 5), y + random.randint(-5, 5))
+
+    def take_job(self, job: str) -> None:
+        """Assign job to NPC."""
+        self.job = job
+
+    def work(self) -> None:
+        """Perform job actions."""
+        if self.job:
+            print(f"{self.name} is working as a {self.job}.")
+
+    def form_family(self, partner: 'NPC') -> None:
+        """Form a family with another NPC."""
+        if "friend" in self.relationships.get(partner.name, ""):
+            self.family.append(partner)
+            partner.family.append(self)
+
+    def __str__(self) -> str:
+        return f"NPC: {self.name}, Hunger: {self.hunger}, Thirst: {self.thirst}, Social: {self.social_needs}"
