@@ -1,0 +1,10 @@
+2D_Game/
+├── main.py
+├── npc.py
+├── world.py
+├── economy.py
+├── assets/
+│   ├── sprites/
+│   └── maps/
+├── README.md
+└── requirements.txt
