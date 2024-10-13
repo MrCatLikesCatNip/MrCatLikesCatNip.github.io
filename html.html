@@ -1,19 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html>
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D NPC Simulation Game</title>
+    <title>2D Town Simulation Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
     <style>
-        canvas {
-            border: 1px solid black;
-            display: block;
-            margin: 0 auto;
-        }
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
     </style>
-</head>
-<body>
-    <canvas id="gameCanvas" width="800" height="800"></canvas>
-    <script src="game.js"></script>
-</body>
+  </head>
+  <body>
+    <script>
+      // Basic config for Phaser Game
+      const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        physics: {
+          default: 'arcade',
+          arcade: {
+            gravity: { y: 0 },
+            debug: false
+          }
+        },
+        scene: {
+          preload: preload,
+          create: create,
+          update: update
+        }
+      };
+
+      const game = new Phaser.Game(config);
+
+      let npcs = [];
+      let world;
+
+      // Function to preload assets
+      function preload() {
+        this.load.image('npc', 'path/to/npc.png');
+        this.load.image('house', 'path/to/house.png');
+        this.load.image('farm', 'path/to/farm.png');
+      }
+
+      // Function to create game entities
+      function create() {
+        // Create the world grid and the NPCs
+        world = createWorldGrid(10, 10);
+        createNPCs(10, this);
+
+        // Create buildings
+        createBuildings(this);
+      }
+
+      // Function to update the game loop
+      function update() {
+        npcs.forEach(npc => {
+          npc.updateBehavior();
+        });
+      }
+
+      // Create the world grid
+      function createWorldGrid(rows, cols) {
+        let grid = [];
+        for (let row = 0; row < rows; row++) {
+          let newRow = [];
+          for (let col = 0; col < cols; col++) {
+            newRow.push({ x: col * 64, y: row * 64, type: 'grass' });
+          }
+          grid.push(newRow);
+        }
+        return grid;
+      }
+
+      // NPC Class
+      class NPC {
+        constructor(scene, x, y, name, personality) {
+          this.sprite = scene.physics.add.sprite(x, y, 'npc');
+          this.name = name;
+          this.personality = personality;
+          this.needs = {
+            hunger: 100,
+            thirst: 100
+          };
+          this.relationships = {
+            friends: [],
+            enemies: [],
+            spouse: null,
+            children: []
+          };
+        }
+
+        // Method to update NPC behavior
+        updateBehavior() {
+          this.updateNeeds();
+          this.move();
+          this.interact();
+        }
+
+        updateNeeds() {
+          this.needs.hunger -= 0.1;
+          this.needs.thirst -= 0.1;
+
+          // Eat or drink if low on food or water
+          if (this.needs.hunger < 20) {
+            this.eat();
+          }
+          if (this.needs.thirst < 20) {
+            this.drink();
+          }
+        }
+
+        move() {
+          // Random movement logic
+          this.sprite.x += Phaser.Math.Between(-1, 1);
+          this.sprite.y += Phaser.Math.Between(-1, 1);
+        }
+
+        interact() {
+          // Placeholder for interactions like talking, forming relationships
+        }
+
+        eat() {
+          // Logic to find food and eat
+          this.needs.hunger += 20;
+        }
+
+        drink() {
+          // Logic to find water and drink
+          this.needs.thirst += 20;
+        }
+      }
+
+      // Function to create NPCs
+      function createNPCs(numNPCs, scene) {
+        for (let i = 0; i < numNPCs; i++) {
+          let x = Phaser.Math.Between(0, 800);
+          let y = Phaser.Math.Between(0, 600);
+          let name = 'NPC ' + i;
+          let personality = Phaser.Math.Between(1, 3); // Placeholder for random personalities
+          let npc = new NPC(scene, x, y, name, personality);
+          npcs.push(npc);
+        }
+      }
+
+      // Function to create buildings (houses, farms, etc.)
+      function createBuildings(scene) {
+        scene.add.sprite(100, 100, 'house');
+        scene.add.sprite(200, 200, 'farm');
+      }
+
+    </script>
+  </body>
 </html>
