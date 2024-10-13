@@ -15,7 +15,6 @@
   </head>
   <body>
     <script>
-      // Basic config for Phaser Game
       const config = {
         type: Phaser.AUTO,
         width: 800,
@@ -39,31 +38,24 @@
       let npcs = [];
       let world;
 
-      // Function to preload assets
       function preload() {
         this.load.image('npc', 'path/to/npc.png');
         this.load.image('house', 'path/to/house.png');
         this.load.image('farm', 'path/to/farm.png');
       }
 
-      // Function to create game entities
       function create() {
-        // Create the world grid and the NPCs
         world = createWorldGrid(10, 10);
         createNPCs(10, this);
-
-        // Create buildings
         createBuildings(this);
       }
 
-      // Function to update the game loop
       function update() {
         npcs.forEach(npc => {
           npc.updateBehavior();
         });
       }
 
-      // Create the world grid
       function createWorldGrid(rows, cols) {
         let grid = [];
         for (let row = 0; row < rows; row++) {
@@ -76,15 +68,16 @@
         return grid;
       }
 
-      // NPC Class
       class NPC {
-        constructor(scene, x, y, name, personality) {
+        constructor(scene, x, y, name, personality, job) {
           this.sprite = scene.physics.add.sprite(x, y, 'npc');
           this.name = name;
           this.personality = personality;
+          this.job = job;
           this.needs = {
             hunger: 100,
-            thirst: 100
+            thirst: 100,
+            social: 50 // New need for social interaction
           };
           this.relationships = {
             friends: [],
@@ -94,60 +87,135 @@
           };
         }
 
-        // Method to update NPC behavior
         updateBehavior() {
           this.updateNeeds();
-          this.move();
-          this.interact();
+          this.makeDecisions();
         }
 
         updateNeeds() {
           this.needs.hunger -= 0.1;
           this.needs.thirst -= 0.1;
+          this.needs.social -= 0.05; // Social need decreases slowly
 
-          // Eat or drink if low on food or water
           if (this.needs.hunger < 20) {
             this.eat();
           }
           if (this.needs.thirst < 20) {
             this.drink();
           }
+          if (this.needs.social < 30) {
+            this.seekSocialInteraction();
+          }
         }
 
-        move() {
-          // Random movement logic
-          this.sprite.x += Phaser.Math.Between(-1, 1);
-          this.sprite.y += Phaser.Math.Between(-1, 1);
+        makeDecisions() {
+          if (this.job) {
+            this.performJob();
+          }
+
+          // Randomly decide to interact with nearby NPCs
+          if (Phaser.Math.Between(0, 100) < 10) {
+            this.interactWith(this.findNearbyNPC());
+          }
         }
 
-        interact() {
-          // Placeholder for interactions like talking, forming relationships
+        performJob() {
+          switch (this.job) {
+            case 'farmer':
+              this.farm();
+              break;
+            case 'builder':
+              this.build();
+              break;
+            case 'trader':
+              this.trade();
+              break;
+            // Add more jobs as needed
+          }
+        }
+
+        farm() {
+          // Farming logic (e.g., grow food for town)
+          console.log(`${this.name} is farming.`);
+        }
+
+        build() {
+          // Building logic (e.g., build structures for town)
+          console.log(`${this.name} is building.`);
+        }
+
+        trade() {
+          // Trading logic (e.g., exchange goods with other NPCs)
+          console.log(`${this.name} is trading.`);
+        }
+
+        seekSocialInteraction() {
+          const nearbyNPC = this.findNearbyNPC();
+          if (nearbyNPC) {
+            this.interactWith(nearbyNPC);
+          }
+        }
+
+        interactWith(npc) {
+          if (!npc) return;
+
+          // Basic interaction logic
+          console.log(`${this.name} is interacting with ${npc.name}.`);
+
+          // Determine relationship effects based on personalities
+          const isFriendly = Phaser.Math.Between(0, 100) > 50;
+          if (isFriendly) {
+            this.formFriendship(npc);
+          } else {
+            this.formRivalry(npc);
+          }
+        }
+
+        formFriendship(npc) {
+          console.log(`${this.name} and ${npc.name} have become friends.`);
+          this.relationships.friends.push(npc);
+          npc.relationships.friends.push(this);
+        }
+
+        formRivalry(npc) {
+          console.log(`${this.name} and ${npc.name} are now rivals.`);
+          this.relationships.enemies.push(npc);
+          npc.relationships.enemies.push(this);
         }
 
         eat() {
-          // Logic to find food and eat
           this.needs.hunger += 20;
+          console.log(`${this.name} is eating.`);
         }
 
         drink() {
-          // Logic to find water and drink
           this.needs.thirst += 20;
+          console.log(`${this.name} is drinking.`);
+        }
+
+        findNearbyNPC() {
+          // Simple logic to find a random nearby NPC
+          if (npcs.length > 1) {
+            const randomNPC = npcs[Phaser.Math.Between(0, npcs.length - 1)];
+            return randomNPC !== this ? randomNPC : null;
+          }
+          return null;
         }
       }
 
-      // Function to create NPCs
       function createNPCs(numNPCs, scene) {
+        const jobs = ['farmer', 'builder', 'trader'];
         for (let i = 0; i < numNPCs; i++) {
           let x = Phaser.Math.Between(0, 800);
           let y = Phaser.Math.Between(0, 600);
           let name = 'NPC ' + i;
           let personality = Phaser.Math.Between(1, 3); // Placeholder for random personalities
-          let npc = new NPC(scene, x, y, name, personality);
+          let job = jobs[Phaser.Math.Between(0, jobs.length - 1)];
+          let npc = new NPC(scene, x, y, name, personality, job);
           npcs.push(npc);
         }
       }
 
-      // Function to create buildings (houses, farms, etc.)
       function createBuildings(scene) {
         scene.add.sprite(100, 100, 'house');
         scene.add.sprite(200, 200, 'farm');
