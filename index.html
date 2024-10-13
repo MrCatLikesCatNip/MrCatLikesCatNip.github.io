@@ -11,9 +11,22 @@
       canvas {
         display: block;
       }
+      #resources {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        font-family: Arial, sans-serif;
+      }
     </style>
   </head>
   <body>
+    <div id="resources">
+      <p>Food: <span id="food">0</span></p>
+      <p>Wealth: <span id="wealth">0</span></p>
+    </div>
     <script>
       const config = {
         type: Phaser.AUTO,
@@ -37,6 +50,10 @@
 
       let npcs = [];
       let world;
+      let townResources = {
+        food: 100,    // Initial amount of food
+        wealth: 50    // Initial amount of wealth
+      };
 
       function preload() {
         this.load.image('npc', 'path/to/npc.png');
@@ -48,6 +65,7 @@
         world = createWorldGrid(10, 10);
         createNPCs(10, this);
         createBuildings(this);
+        updateResourceDisplay();
       }
 
       function update() {
@@ -77,7 +95,7 @@
           this.needs = {
             hunger: 100,
             thirst: 100,
-            social: 50 // New need for social interaction
+            social: 50 // Social need
           };
           this.relationships = {
             friends: [],
@@ -135,17 +153,21 @@
         }
 
         farm() {
-          // Farming logic (e.g., grow food for town)
+          // Farmers produce food
+          townResources.food += 2; // Farmers generate food every time they work
+          updateResourceDisplay();
           console.log(`${this.name} is farming.`);
         }
 
         build() {
-          // Building logic (e.g., build structures for town)
+          // Builders may use wealth to build structures (future implementation)
           console.log(`${this.name} is building.`);
         }
 
         trade() {
-          // Trading logic (e.g., exchange goods with other NPCs)
+          // Traders generate wealth
+          townResources.wealth += 1; // Traders generate wealth every time they work
+          updateResourceDisplay();
           console.log(`${this.name} is trading.`);
         }
 
@@ -159,10 +181,8 @@
         interactWith(npc) {
           if (!npc) return;
 
-          // Basic interaction logic
           console.log(`${this.name} is interacting with ${npc.name}.`);
 
-          // Determine relationship effects based on personalities
           const isFriendly = Phaser.Math.Between(0, 100) > 50;
           if (isFriendly) {
             this.formFriendship(npc);
@@ -184,8 +204,15 @@
         }
 
         eat() {
-          this.needs.hunger += 20;
-          console.log(`${this.name} is eating.`);
+          if (townResources.food > 0) {
+            this.needs.hunger += 20;
+            townResources.food -= 1; // NPC consumes food from the town's stock
+            updateResourceDisplay();
+            console.log(`${this.name} is eating.`);
+          } else {
+            console.log(`${this.name} can't find food!`);
+            // Future implementation: handle starvation or leaving the town
+          }
         }
 
         drink() {
@@ -194,7 +221,6 @@
         }
 
         findNearbyNPC() {
-          // Simple logic to find a random nearby NPC
           if (npcs.length > 1) {
             const randomNPC = npcs[Phaser.Math.Between(0, npcs.length - 1)];
             return randomNPC !== this ? randomNPC : null;
@@ -219,6 +245,11 @@
       function createBuildings(scene) {
         scene.add.sprite(100, 100, 'house');
         scene.add.sprite(200, 200, 'farm');
+      }
+
+      function updateResourceDisplay() {
+        document.getElementById('food').textContent = townResources.food;
+        document.getElementById('wealth').textContent = townResources.wealth;
       }
 
     </script>
